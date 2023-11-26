@@ -2,6 +2,7 @@ import AbortController from "abort-controller";
 import * as fs from 'fs/promises';
 import fetch from 'node-fetch';
 import { URL } from 'url';
+import { AbortSignal } from 'node-fetch/externals';  // Workaround for https://github.com/node-fetch/node-fetch/issues/1652
 
 export const type = 'nodebuffer';
 
@@ -11,9 +12,9 @@ const fetchable = async (url: string, timeout: number) => {
 
   try {
     if (url.startsWith('file://'))
-      return fs.readFile(new URL(url), { signal: controller.signal });
+      return fs.readFile(new URL(url), { signal: controller.signal as AbortSignal });
     
-    const res = await fetch(url, { signal: controller.signal });
+    const res = await fetch(url, { signal: controller.signal as AbortSignal });
     if (!res.ok)
       throw new Error(`Got error ${res.status} (${res.statusText}) while fetching ${url}`);
     return res.buffer();
