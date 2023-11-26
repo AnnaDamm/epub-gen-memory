@@ -1,4 +1,4 @@
-import ow, { ObjectPredicate, Predicate } from 'ow';
+import ow, { AnyPredicate, ObjectPredicate, Predicate } from 'ow';
 import { Merge } from 'type-fest';
 
 export type Chapter = {
@@ -19,6 +19,30 @@ export type Font = {
 };
 
 export type LogFn = (type: 'log' | 'warn', ...args: any[]) => void;
+
+export enum LandmarkEnum {
+  cover = 'cover',
+  toc = 'toc',
+  hidden = 'hidden'
+}
+export type LandmarkType = keyof typeof LandmarkEnum;
+
+export type Landmarks = {
+  cover?: LandmarkType | number,
+  toc?: LandmarkType | number ,
+  bodyMatter?: LandmarkType | number ,
+  titlePage?: LandmarkType | number ,
+  frontMatter?: LandmarkType | number ,
+  backMatter?: LandmarkType | number ,
+  listOfIllustrations?: LandmarkType | number ,
+  listOfTables?: LandmarkType | number ,
+  preface?: LandmarkType | number ,
+  bibliography?: LandmarkType | number ,
+  index?: LandmarkType | number ,
+  glossary?: LandmarkType | number ,
+  acknowledgments?: LandmarkType | number ,
+};
+
 export type Options = {
   title: string,
   author?: string | string[],
@@ -43,7 +67,30 @@ export type Options = {
   batchSize?: number,
   ignoreFailedDownloads?: boolean,
   verbose?: boolean | LogFn,
+  landmarks?: Landmarks,
 };
+
+export const landmarkPredicate: AnyPredicate<LandmarkType | number | undefined> = ow.optional.any(
+    ow.string.oneOf(Object.values(LandmarkEnum)),
+    ow.number.integer.greaterThanOrEqual(0),
+    ow.undefined,
+)
+
+export const landmarksPredicate: ObjectPredicate<Landmarks> = ow.object.partialShape({
+  cover: landmarkPredicate,
+  toc: landmarkPredicate,
+  bodyMatter: landmarkPredicate,
+  titlePage: landmarkPredicate,
+  frontMatter: landmarkPredicate,
+  backMatter: landmarkPredicate,
+  listOfIllustrations: landmarkPredicate,
+  listOfTables: landmarkPredicate,
+  preface: landmarkPredicate,
+  bibliography: landmarkPredicate,
+  index: landmarkPredicate,
+  glossary: landmarkPredicate,
+  acknowledgments: landmarkPredicate,
+});
 
 const name = ow.optional.any(ow.string, ow.array.ofType(ow.string), ow.undefined);
 const filename = ow.optional.string.is(s => (s.indexOf('/') === -1 && s.indexOf('\\') === -1) || `Filename must not include slashes, got \`${s}\``);
@@ -89,6 +136,7 @@ export const optionsPredicate: ObjectPredicate<Options> = ow.object.partialShape
   batchSize: ow.optional.number.positive,
   ignoreFailedDownloads: ow.optional.boolean,
   verbose: ow.optional.any(ow.boolean, ow.function as Predicate<LogFn>),
+  landmarks: ow.optional.any(landmarksPredicate, ow.undefined),
 });
 
 
@@ -98,13 +146,15 @@ type NonNullableObject<T> = T extends Record<string, unknown>
   ? Array<NonNullableObject<R>>
   : NonNullable<T>;
 
-export type NormOptions = NonNullableObject<
+export type NormOptions = Merge<NonNullableObject<
   Merge<Options, {
     author: string[],
     fonts: ({
       mediaType: string | null,
     } & Font)[],
-  }>>;
+  }>>, {
+  landmarks: Landmarks
+}>;
 export type NormChapter = NonNullableObject<
   Merge<Chapter, {
     id: string,

@@ -28,5 +28,32 @@
             <% }) %>
         </ol>
     </nav>
+    <% if (landmarks){ %>
+        <nav id="landmarks" epub:type="landmarks" hidden="hidden">
+            <ol>
+                <% Object.keys(landmarks).forEach(function(type){ %>
+                    <% const landmark = landmarks[type]; %>
+                    <% if (landmark === 'cover') { %>
+                        <% if (cover !== undefined) { %>
+                            <li>
+                                <a href="cover.<%= cover.extension %>" epub:type="<%= type %>>">cover</a>
+                            </li>
+                        <% } %>
+                    <% } else if (landmark === 'toc') { %>
+                        <li>
+                            <a href="toc.xhtml" epub:type="<%= type %>>"><%= tocTitle %></a>
+                        </li>
+                    <% } else { %>
+                        <% const chapter = content[landmark] || undefined; %>
+                        <% if (chapter !== undefined) { %>
+                            <li>
+                                <a href="<%= chapter.filename %>" epub:type="<%= type %>>"><%= content.title %></a>
+                            </li>
+                        <% } %>
+                    <% } %>
+                <% }) %>
+            </ol>
+        </nav>
+    <% } %>
 </body>
 </html>

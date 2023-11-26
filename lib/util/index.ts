@@ -12,7 +12,17 @@ import css from 'templates/template.css';
 import tocNCX from 'templates/toc.ncx.ejs';
 import type { EPub } from '..';
 import { normalizeHTML } from './html';
-import { Chapter, chapterPredicate, Content, Font, NormChapter, NormOptions, Options, optionsPredicate } from './validate';
+import {
+  Chapter,
+  chapterPredicate,
+  Content,
+  Font,
+  Landmarks, LandmarkType,
+  NormChapter,
+  NormOptions,
+  Options,
+  optionsPredicate
+} from './validate';
 
 export * from './html';
 export * from './other';
@@ -51,6 +61,10 @@ export const chapterDefaults = (index: number) => ({
   beforeToc: false,
 });
 
+export const landmarkDefaults: {[type in keyof Landmarks]: LandmarkType | number} = {
+  toc: 'toc',
+  cover: 'cover',
+};
 
 export const normName = (name: string | string[] | undefined): string[] => ow.isValid(name, ow.string) ? [name] : (name || []);
 
@@ -61,6 +75,10 @@ export const validateAndNormalizeOptions = (options: Options) => {
   const opt = {
     ...optionsDefaults(options.version || 3),
     ...options,
+    landmarks: {
+      ...landmarkDefaults,
+      ...options.landmarks,
+    }
   } as NormOptions;
   opt.author = normName(opt.author);
   opt.fonts = opt.fonts.map(font => ({ ...font, mediaType: getType(font.filename)! }));
